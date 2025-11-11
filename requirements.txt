@@ -1,0 +1,24 @@
+# === Core ===
+torch>=2.1.0
+torchvision>=0.16.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# === Detection ===
+ultralytics>=8.1.0   # YOLOv8
+
+# === Computer Vision ===
+opencv-python>=4.8.0
+matplotlib>=3.8.0
+
+# === Utilities ===
+tqdm>=4.66.0
+pyyaml>=6.0
+
+# === Optional for Jetson / NPU Optimization ===
+onnx>=1.14.0
+onnxruntime-gpu>=1.16.0
+
+# === Notes ===
+# Jetson 환경에서는 GUI 불필요 시 아래로 교체 권장
+# opencv-python-headless>=4.8.0
