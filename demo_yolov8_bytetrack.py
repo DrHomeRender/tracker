@@ -16,21 +16,34 @@ def main():
     
     # 비디오 소스 설정 (0: 웹캠, 또는 비디오 파일 경로)
     video_source = 0  # 웹캠 사용
+    use_dummy_frame = False  # 웹캠이 없을 때 더미 프레임 사용
+    
     cap = cv2.VideoCapture(video_source)
     
     if not cap.isOpened():
-        print(f"Error: 비디오 소스 '{video_source}'를 열 수 없습니다.")
-        sys.exit(1)
+        print(f"⚠ 경고: 비디오 소스 '{video_source}'를 열 수 없습니다.")
+        print("   더미 프레임 모드로 전환합니다...")
+        use_dummy_frame = True
+        cap = None
     
     print("추적 시작... (ESC 키로 종료)")
     frame_count = 0
     
     try:
         while True:
-            ret, frame = cap.read()
-            if not ret:
-                print("프레임 읽기 실패 또는 비디오 종료")
-                break
+            if use_dummy_frame:
+                # 더미 프레임 생성 (640x480, 랜덤 노이즈)
+                frame = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+                # 중앙에 테스트 박스 그리기
+                cv2.rectangle(frame, (200, 150), (440, 330), (255, 255, 255), 2)
+                cv2.putText(frame, "Dummy Frame (No Camera)", (150, 100),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                ret = True
+            else:
+                ret, frame = cap.read()
+                if not ret:
+                    print("프레임 읽기 실패 또는 비디오 종료")
+                    break
             
             frame_count += 1
             
@@ -76,7 +89,8 @@ def main():
     except Exception as e:
         print(f"오류 발생: {e}")
     finally:
-        cap.release()
+        if cap is not None:
+            cap.release()
         cv2.destroyAllWindows()
         print("리소스 정리 완료")
 
