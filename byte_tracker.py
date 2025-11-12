@@ -66,6 +66,25 @@ class BYTETracker:
         else:
             unmatched_tracks = list(range(len(self.tracks)))
             unmatched_dets = list(range(len(dets)))
+        # Step 4: Hungarian matching
+
+        # Step 4.5: Low-score detection second association (ByteTrack 핵심)
+        low_dets = detections[(detections[:, 4] <= self.track_thresh) & (detections[:, 4] > 0.1)]
+        if len(low_dets) > 0 and len(unmatched_tracks) > 0:
+            iou_low = np.zeros((len(unmatched_tracks), len(low_dets)))
+            for i, ut in enumerate(unmatched_tracks):
+                for j, ld in enumerate(low_dets):
+                    iou_low[i, j] = iou(self.tracks[ut].to_tlbr(), ld[:4])
+
+            row, col = linear_sum_assignment(-iou_low)
+            for r, c in zip(row, col):
+                if iou_low[r, c] >= self.match_thresh * 0.9:  # 낮은 점수는 기준 완화
+                    t = self.tracks[unmatched_tracks[r]]
+                    m = self.xyxy_to_xyah(low_dets[c, :4])
+                    t.mean, t.cov = self.kf.update(t.mean, t.cov, m)
+                    t.hits += 1
+                    t.time_since_update = 0
+                    t.state = 'Tracked'
 
         # Step 5: Update matched tracks
         for r, c in matched:
